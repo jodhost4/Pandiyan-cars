@@ -191,8 +191,7 @@ export default function Site(){
       </section>
 
       <section id="sell" className="sell-section">
-        <div className="sell-copy"><SectionLabel number="02">YOUR CAR’S NEXT CHAPTER</SectionLabel><h2>Ready to pass<br/>the keys <em>on?</em></h2><p>We’ll give your car a fair look, a straight answer and a no-pressure offer. You bring the car; we’ll take it from here.</p><div className="sell-points"><span><b>01</b> Tell us about your car</span><span><b>02</b> We’ll arrange an inspection</span><span><b>03</b> Get a fair, clear offer</span></div></div>
-        <div className="sell-car-visual" aria-hidden="true"><img src="/images/sell-car.png" alt=""/></div>
+        <div className="sell-copy"><SectionLabel number="02">YOUR CAR’S NEXT CHAPTER</SectionLabel><h2>Ready to pass<br/>the keys <em>on?</em></h2><p>We’ll give your car a fair look, a straight answer and a no-pressure offer. You bring the car; we’ll take it from here.</p><div className="sell-points"><span><b>01</b> Tell us about your car</span><span><b>02</b> We’ll arrange an inspection</span><span><b>03</b> Get a fair, clear offer</span></div><div className="sell-car-visual" aria-hidden="true"><img src="/images/sell-car.png" alt=""/></div></div>
         <div className="sell-form-panel"><div className="form-heading"><span className="form-kicker">SELL WITH US</span><h3>Let’s get started.</h3><p>Share a few details. We’ll take it from there.</p></div><LeadForm type="sell" placeholder="Make, model, year, kilometres and expected price" buttonLabel="Get my car valued"/></div>
       </section>
 
