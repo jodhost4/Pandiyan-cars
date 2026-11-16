@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://pandiyan-cars-server.onrender.com/api/:path*" },
+    { "source": "/uploads/:path*", "destination": "https://pandiyan-cars-server.onrender.com/uploads/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
