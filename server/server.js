@@ -57,8 +57,13 @@ const leadSchema=new Schema({
   status:{type:String,enum:['new','contacted','visit','won','lost'],default:'new'},
   notes:[{text:{type:String,required:true,maxlength:1000},at:{type:Date,default:Date.now}}]
 },{timestamps:true});
+const galleryPhotoSchema=new Schema({
+  image:{type:String,required:true},
+  caption:{type:String,trim:true,maxlength:120}
+},{timestamps:true});
 const Car=model('Car',carSchema);
 const Lead=model('Lead',leadSchema);
+const GalleryPhoto=model('GalleryPhoto',galleryPhotoSchema);
 
 function auth(req,res,next){
   try{
@@ -115,6 +120,29 @@ app.put('/api/cars/:id',auth,upload.array('images',8),wrap(async(req,res)=>{
 app.delete('/api/cars/:id',auth,wrap(async(req,res)=>{
   const car=await Car.findByIdAndDelete(req.params.id);
   if(!car)return res.status(404).json({error:'Car not found.'});
+  res.json({ok:true});
+}));
+
+app.get('/api/gallery',wrap(async(_req,res)=>{
+  res.json(await GalleryPhoto.find().sort('-createdAt').lean());
+}));
+app.post('/api/gallery',auth,upload.array('images',8),wrap(async(req,res)=>{
+  if(!req.files?.length)return res.status(400).json({error:'Choose at least one photo to upload.'});
+  const caption=typeof req.body.caption==='string'?req.body.caption.trim().slice(0,120):'';
+  const photos=await GalleryPhoto.insertMany(req.files.map(file=>({
+    image:`/uploads/${file.filename}`,
+    caption
+  })));
+  res.status(201).json(photos);
+}));
+app.delete('/api/gallery/:id',auth,wrap(async(req,res)=>{
+  const photo=await GalleryPhoto.findByIdAndDelete(req.params.id);
+  if(!photo)return res.status(404).json({error:'Gallery photo not found.'});
+  const filename=photo.image.startsWith('/uploads/')?path.basename(photo.image):'';
+  if(filename){
+    try{await fs.promises.unlink(path.join(uploadsDir,filename))}
+    catch(error){if(error.code!=='ENOENT')console.error('Could not remove deleted gallery image:',error)}
+  }
   res.json({ok:true});
 }));
 

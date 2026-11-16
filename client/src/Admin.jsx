@@ -34,9 +34,9 @@ export default function Admin(){
   const [tab,setTab]=useState('cars');
   if(!authed)return <Login onLogin={()=>setAuthed(true)}/>;
   return <div className="admin"><header className="nav"><a href="/" className="admin-brand">Pandiyan Cars <span>· Owner dashboard</span></a>
-    <nav>{['cars','leads','reports'].map(item=><a key={item} className={tab===item?'on':''} onClick={()=>setTab(item)}>{item==='leads'?'CRM leads':item[0].toUpperCase()+item.slice(1)}</a>)}
+    <nav>{['cars','gallery','leads','reports'].map(item=><a key={item} className={tab===item?'on':''} onClick={()=>setTab(item)}>{item==='leads'?'CRM leads':item[0].toUpperCase()+item.slice(1)}</a>)}
       <a onClick={()=>{localStorage.removeItem('token');setAuthed(false)}}>Log out</a></nav></header>
-    <main className="sec">{tab==='cars'?<Cars/>:tab==='leads'?<Leads/>:<Reports/>}</main></div>;
+    <main className="sec">{tab==='cars'?<Cars/>:tab==='gallery'?<GalleryAdmin/>:tab==='leads'?<Leads/>:<Reports/>}</main></div>;
 }
 
 function Login({onLogin}){
@@ -123,6 +123,63 @@ function Cars(){
     {error&&<p className="admin-error" role="alert">{error}</p>}
     {cars?.length===0&&<p className="admin-empty">No cars have been added yet. Add your first listing above.</p>}
     <div className="grid">{(cars||[]).map(car=><article className="card" key={car._id}><img src={car.images?.[0]||'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=70'} alt={car.title}/><div className="body"><span className={`admin-status ${car.status==='sold'?'sold':''}`}>{car.status}</span><h3>{car.title}</h3><div className="price">{inr(car.price)}</div><p className="meta">{car.year} · {Number(car.km||0).toLocaleString('en-IN')} km · {car.fuel}</p><div className="row"><button className="btn sm" onClick={()=>edit(car)}>Edit</button><button className="btn sm ghost" onClick={()=>changeStatus(car)}>{car.status==='sold'?'Mark available':'Mark sold'}</button><button className="btn sm ghost" onClick={()=>remove(car)}>Delete</button></div></div></article>)}</div>
+  </>;
+}
+
+function GalleryAdmin(){
+  const {data:photos,error,refresh}=useLoad(()=>api('/gallery'));
+  const [files,setFiles]=useState([]);
+  const [previews,setPreviews]=useState([]);
+  const [caption,setCaption]=useState('');
+  const [busy,setBusy]=useState(false);
+  const [message,setMessage]=useState('');
+  useEffect(()=>{
+    const urls=files.map(file=>URL.createObjectURL(file));
+    setPreviews(urls);
+    return ()=>urls.forEach(url=>URL.revokeObjectURL(url));
+  },[files]);
+  function choosePhotos(event){
+    const selected=[...event.target.files];
+    setFiles(selected.slice(0,8));
+    setMessage(selected.length>8?'Only the first 8 photos were selected.':'');
+  }
+  async function uploadPhotos(event){
+    event.preventDefault();
+    if(!files.length){setMessage('Choose at least one photo to upload.');return}
+    const form=event.currentTarget;
+    setBusy(true);setMessage('');
+    try{
+      const body=new FormData();
+      files.forEach(file=>body.append('images',file));
+      body.append('caption',caption);
+      await api('/gallery',{method:'POST',body});
+      setFiles([]);setCaption('');form.reset();
+      setMessage('Gallery photos uploaded.');
+      refresh();
+    }catch(reason){setMessage(reason.message)}
+    finally{setBusy(false)}
+  }
+  async function removePhoto(photo){
+    if(!window.confirm('Delete this gallery photo? This cannot be undone.'))return;
+    setMessage('');
+    try{await api(`/gallery/${photo._id}`,{method:'DELETE'});setMessage('Gallery photo deleted.');refresh()}
+    catch(reason){setMessage(reason.message)}
+  }
+  return <>
+    <div className="admin-page-heading"><div><span className="form-kicker">PHOTO COLLECTION</span><h1>Gallery</h1><p>Upload photos for the public gallery. Only signed-in owners can manage these photos.</p></div><a className="button button-outline" href="/gallery" target="_blank" rel="noreferrer">View gallery ↗</a></div>
+    <form className="admin-editor gallery-upload-form" onSubmit={uploadPhotos}>
+      <h2>Upload gallery photos</h2>
+      <div className="admin-form-grid">
+        <label className="admin-full">Photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple required onChange={choosePhotos}/><span className="admin-help">{files.length?`${files.length} photo${files.length===1?'':'s'} selected.`:'Choose up to 8 JPG, PNG or WebP images, up to 5 MB each.'}</span></label>
+        <label className="admin-full">Caption <span className="admin-help">(optional; applies to all selected photos)</span><input value={caption} onChange={event=>setCaption(event.target.value)} maxLength="120" placeholder="e.g. A day with the Pandiyan Cars team"/></label>
+        {previews.length>0&&<div className="admin-photo-previews admin-full">{previews.map((src,index)=><img key={src} src={src} alt={`Selected gallery photo ${index+1}`}/>)}</div>}
+      </div>
+      <div className="admin-actions"><button className="button button-dark" disabled={busy||!files.length}>{busy?'Uploading…':'Upload photos'} <span aria-hidden="true">↑</span></button>{message&&<span className="admin-feedback" role="status">{message}</span>}</div>
+    </form>
+    <div className="admin-section-heading"><h2>Published photos</h2><span>{photos?.length||0} photos</span></div>
+    {error&&<p className="admin-error" role="alert">{error}</p>}
+    {photos?.length===0&&<p className="admin-empty">No gallery photos yet. Upload your first photos above.</p>}
+    {photos?.length>0&&<div className="admin-gallery-grid">{photos.map(photo=><article className="admin-gallery-card" key={photo._id}><img src={photo.image} alt={photo.caption||'Gallery photo'}/><div><p>{photo.caption||'No caption'}</p><button className="btn sm ghost" onClick={()=>removePhoto(photo)}>Delete photo</button></div></article>)}</div>}
   </>;
 }
 

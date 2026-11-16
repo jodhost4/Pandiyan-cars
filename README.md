@@ -49,8 +49,12 @@ The Express API can serve the production React build, so the website, admin dash
 
 Set the upload directory to the provider's persistent disk path. Without persistent storage, uploaded photos may be lost when the service restarts or redeploys. Keep `server/.env` and production credentials out of source control.
 
+## Photo gallery
+
+The public gallery is available at `/gallery`. Sign in to `/admin`, open the **Gallery** tab, choose up to 8 JPG, PNG, or WebP photos (5 MB each), and optionally add a caption for the batch. Uploaded photos appear in the public gallery; owners can remove them from the same admin tab. Gallery photos use the same persistent `UPLOADS_DIR` storage as car listing photos.
+
 ## Dealership details
 
-Update `client/src/config.js` with the dealership's WhatsApp number (digits only, including the country code), phone number, street address, and Google Maps embed URL. Use the `src` URL from Google Maps' **Share → Embed a map** option.
+Update `client/src/config.js` with the dealership's WhatsApp number (digits only, including the country code), phone number, and Facebook/Instagram profile URLs. The address, directions link, and map coordinates are configured there as well.
 
 The example `.env` values are for local setup only. Set private credentials before running the API; do not commit `server/.env`.
