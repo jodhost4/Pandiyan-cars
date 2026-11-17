@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
-import {wa,inr,PHONE,ADDRESS,MAP_SRC,MAP_LINK,SOCIAL_LINKS} from './config.js';
+import {wa,inr,PHONE,ADDRESS,MAP_SRC,MAP_LINK} from './config.js';
+import SocialIcons from './SocialIcons.jsx';
 
 async function request(path,options){
   const response=await fetch(path,options);
@@ -31,7 +32,7 @@ function LeadForm({type,car,placeholder,buttonLabel}){
     try{
       await request('/api/leads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,message:enquiryMessage,type,car:car?._id})});
       form.reset();
-      setMessage('Thanks! The Pandiyan Cars team will be in touch shortly.');
+      setMessage('Thanks! The Elite Wheelz team will be in touch shortly.');
     }catch(error){setMessage(error.message)}
     finally{setBusy(false)}
   }
@@ -81,6 +82,30 @@ export default function Site(){
     return ()=>clearInterval(timer);
   },[cars.length]);
 
+  useEffect(()=>{
+    const textElements=document.querySelectorAll(
+      'main > section:not(.hero) .section-label, main > section:not(.hero) h2, main > section:not(.hero) h3, main > section:not(.hero) p, main > section:not(.hero) .sell-points, main > section:not(.hero) .signature, main > section:not(.hero) .contact-details > a, main > section:not(.hero) .contact-details > span, .site-footer .brand, .site-footer > span, .site-footer .social-links'
+    );
+    if(!('IntersectionObserver' in window)){
+      textElements.forEach(element=>element.classList.add('is-visible'));
+      return undefined;
+    }
+    const observer=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    },{threshold:.12,rootMargin:'0px 0px -35px 0px'});
+    textElements.forEach((element,index)=>{
+      element.style.setProperty('--reveal-delay',`${(index%4)*75}ms`);
+      element.classList.add('scroll-reveal');
+      observer.observe(element);
+    });
+    return ()=>observer.disconnect();
+  },[]);
+
   function moveFeatured(step){setFeaturedIndex(index=>(index+step+cars.length)%cars.length)}
   function setFilter(field,value){setFilters(current=>({...current,[field]:value}))}
   function clearFilters(){setFilters({model:'',make:'',bodyType:'',priceMin:'',priceMax:'',fuel:'',transmission:'',color:'',owners:'',kmMin:'',kmMax:'',yearMin:'',yearMax:''})}
@@ -112,12 +137,12 @@ export default function Site(){
 
   return <>
     <header className="site-nav">
-      <a href="#top" className="brand" aria-label="Pandiyan Cars home"><span className="brand-mark">P<span>.</span></span><span>Pandiyan<span className="brand-sub">PRE-OWNED CARS · MADURAI</span></span></a>
+      <a href="#top" className="brand" aria-label="Elite Wheelz home"><img className="brand-logo" src="/images/elite-wheelz-logo.png" alt=""/><span>Elite Wheelz<span className="brand-sub">PRE-OWNED CARS · MADURAI</span></span></a>
       <button className="menu-toggle" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={()=>setMenuOpen(!menuOpen)}>☰</button>
       <nav className={menuOpen?'nav-links open':'nav-links'} aria-label="Main navigation">
-        <a href="#buy" onClick={()=>setMenuOpen(false)}>Buy cars</a><a href="/gallery" onClick={()=>setMenuOpen(false)}>Gallery</a><a href="#sell" onClick={()=>setMenuOpen(false)}>Sell your car</a>
+        <a href="#buy" onClick={()=>setMenuOpen(false)}>Buy cars</a><a href="#sell" onClick={()=>setMenuOpen(false)}>Sell your car</a><a href="/gallery" onClick={()=>setMenuOpen(false)}>Gallery</a>
         <a href="#about" onClick={()=>setMenuOpen(false)}>Our story</a><a href="#contact" onClick={()=>setMenuOpen(false)}>Contact</a>
-        <a className="button button-dark nav-cta" href={wa('Hi Pandiyan Cars, I would like to enquire about a car.')} target="_blank" rel="noreferrer" onClick={()=>setMenuOpen(false)}>Talk to us <span aria-hidden="true">↗</span></a>
+        <a className="button button-dark nav-cta" href={wa('Hi Elite Wheelz, I would like to enquire about a car.')} target="_blank" rel="noreferrer" onClick={()=>setMenuOpen(false)}>Talk to us <span aria-hidden="true">↗</span></a>
       </nav>
     </header>
 
@@ -132,8 +157,8 @@ export default function Site(){
           <p>Good cars, chosen with care. Explore a considered collection of pre-owned cars, ready for the road ahead.</p>
           <div className="hero-actions"><a className="button button-lime" href="#buy">Explore our cars <span aria-hidden="true">↗</span></a><a className="text-link light-link" href="#sell">I want to sell my car <span aria-hidden="true">→</span></a></div>
         </div>
-        {cars.length>0&&<aside className="hero-feature" aria-label="Pandiyan picks">
-          <span className="feature-kicker">A PANDIYAN PICK <span aria-hidden="true">✳</span></span>
+        {cars.length>0&&<aside className="hero-feature" aria-label="Elite Wheelz picks">
+          <span className="feature-kicker">ELITE WHEELZ PICK <span aria-hidden="true">✳</span></span>
           <div className="feature-viewport" aria-live="polite">
             <div className="feature-track" style={{transform:`translateX(-${featuredIndex*100}%)`}}>
               {cars.map((car,index)=><article className="hero-feature-slide" key={car._id} aria-label={`${index+1} of ${cars.length}`}>
@@ -143,7 +168,7 @@ export default function Site(){
               </article>)}
             </div>
           </div>
-          {cars.length>1&&<div className="feature-controls" aria-label="Choose a Pandiyan pick">
+          {cars.length>1&&<div className="feature-controls" aria-label="Choose an Elite Wheelz pick">
             <button type="button" aria-label="Previous featured car" onClick={()=>moveFeatured(-1)}>←</button>
             <span>{String(featuredIndex+1).padStart(2,'0')} / {String(cars.length).padStart(2,'0')}</span>
             <button type="button" aria-label="Next featured car" onClick={()=>moveFeatured(1)}>→</button>
@@ -161,7 +186,7 @@ export default function Site(){
 
       <section id="buy" className="section inventory-section">
         <div className="section-top"><SectionLabel number="01">THE LINE-UP</SectionLabel><span className="inventory-count">{filteredCars.length.toString().padStart(2,'0')} of {cars.length} cars</span></div>
-        <div className="section-heading-row"><div><h2>Find your <em>perfect car.</em></h2><p className="section-intro">Narrow down the line-up to find the right fit.</p></div><a className="text-link desktop-link" href={wa('Hi Pandiyan Cars, I am looking for a car that is not listed on your website.')}>Can’t find what you’re after? <span aria-hidden="true">→</span></a></div>
+        <div className="section-heading-row"><div><h2>Find your <em>perfect car.</em></h2><p className="section-intro">Narrow down the line-up to find the right fit.</p></div><a className="text-link desktop-link" href={wa('Hi Elite Wheelz, I am looking for a car that is not listed on your website.')}>Can’t find what you’re after? <span aria-hidden="true">→</span></a></div>
         <div className="car-finder" aria-label="Find your perfect car">
           <div className="car-filters">
             <label>Model<input value={filters.model} onChange={event=>setFilter('model',event.target.value)} placeholder="Search model"/></label>
@@ -178,16 +203,16 @@ export default function Site(){
           <button type="button" className="filter-reset" onClick={clearFilters}>Clear filters <span aria-hidden="true">×</span></button>
         </div>
         {error&&<p className="empty-state" role="alert">{error}</p>}
-        {!error&&!cars.length&&<div className="empty-state"><span className="empty-mark">✳</span><h3>No cars in the line-up just yet.</h3><p>We’re always finding the next good one. Send us a message and we’ll help you look.</p><a className="text-link" href={wa('Hi Pandiyan Cars, I am looking for a car.')}>Ask us on WhatsApp <span aria-hidden="true">↗</span></a></div>}
+        {!error&&!cars.length&&<div className="empty-state"><span className="empty-mark">✳</span><h3>No cars in the line-up just yet.</h3><p>We’re always finding the next good one. Send us a message and we’ll help you look.</p><a className="text-link" href={wa('Hi Elite Wheelz, I am looking for a car.')}>Ask us on WhatsApp <span aria-hidden="true">↗</span></a></div>}
         {!error&&cars.length>0&&!filteredCars.length&&<div className="empty-state"><span className="empty-mark">✳</span><h3>No cars match those filters.</h3><p>Try adjusting your search or clearing the filters.</p><button className="button button-outline" onClick={clearFilters}>Clear filters</button></div>}
         <div className="car-grid">{filteredCars.map((car,index)=><article className="car-card" key={car._id}>
           <div className="car-image-wrap"><img className="car-image" src={car.images?.[0]||'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1000&q=75'} alt={car.title} loading="lazy"/><span className="car-number">{String(index+1).padStart(2,'0')}</span><span className="car-image-label">CHECKED &amp; READY</span></div>
-          <div className="car-details"><div className="car-title-row"><div><span className="car-make">{car.brand||'PANDIYAN PICK'}</span><h3>{car.title}</h3></div><strong className="car-price">{inr(car.price)}</strong></div>
+          <div className="car-details"><div className="car-title-row"><div><span className="car-make">{car.brand||'ELITE WHEELZ PICK'}</span><h3>{car.title}</h3></div><strong className="car-price">{inr(car.price)}</strong></div>
             <div className="car-specs"><span>{car.year}</span><span>{Number(car.km||0).toLocaleString('en-IN')} km</span><span>{car.fuel}</span><span>{car.transmission}</span>{car.bodyType&&<span>{car.bodyType}</span>}{car.color&&<span>{car.color}</span>}{car.owners&&<span>{car.owners} owner{Number(car.owners)===1?'':'s'}</span>}</div>
-            <div className="car-actions"><button className="button button-outline" onClick={()=>setSelectedCar(car)}>Ask about this car <span aria-hidden="true">↗</span></button><a className="whatsapp-link" target="_blank" rel="noreferrer" href={wa(`Hi Pandiyan Cars, I'm interested in the ${car.title} (${car.year}) listed for ${inr(car.price)}.`)}>WhatsApp us</a></div>
+            <div className="car-actions"><button className="button button-outline" onClick={()=>setSelectedCar(car)}>Ask about this car <span aria-hidden="true">↗</span></button><a className="whatsapp-link" target="_blank" rel="noreferrer" href={wa(`Hi Elite Wheelz, I'm interested in the ${car.title} (${car.year}) listed for ${inr(car.price)}.`)}>WhatsApp us</a></div>
           </div>
         </article>)}</div>
-        <div className="mobile-enquire"><a className="text-link" href={wa('Hi Pandiyan Cars, I am looking for a car that is not listed on your website.')}>Looking for something else? Tell us <span aria-hidden="true">→</span></a></div>
+        <div className="mobile-enquire"><a className="text-link" href={wa('Hi Elite Wheelz, I am looking for a car that is not listed on your website.')}>Looking for something else? Tell us <span aria-hidden="true">→</span></a></div>
       </section>
 
       <section id="sell" className="sell-section">
@@ -197,18 +222,18 @@ export default function Site(){
 
       <section id="about" className="story-section">
         <div className="story-image"><img src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1200&q=80" alt="A scenic open road at golden hour" loading="lazy"/><span>MADURAI, OUR HOME.</span></div>
-        <div className="story-copy"><SectionLabel number="03">A LITTLE ABOUT US</SectionLabel><h2>Cars are easy.<br/><em>Trust is personal.</em></h2><p>At Pandiyan Cars, we believe buying a pre-owned car should feel exciting, not uncertain. We’re a local team that takes the time to check the details, share what we know and help you find a car that fits your life.</p><p>No big promises. No pressure. Just good cars and a good conversation.</p><a className="text-link" href="#contact">Come say hello <span aria-hidden="true">→</span></a><div className="signature">Good journeys start here<span>— Pandiyan Cars</span></div></div>
+        <div className="story-copy"><SectionLabel number="03">A LITTLE ABOUT US</SectionLabel><h2>Cars are easy.<br/><em>Trust is personal.</em></h2><p>At Elite Wheelz, we believe buying a pre-owned car should feel exciting, not uncertain. We’re a local team that takes the time to check the details, share what we know and help you find a car that fits your life.</p><p>No big promises. No pressure. Just good cars and a good conversation.</p><a className="text-link" href="#contact">Come say hello <span aria-hidden="true">→</span></a><div className="signature">Good journeys start here<span>— Elite Wheelz</span></div></div>
       </section>
 
       <section className="reviews-section" aria-labelledby="reviews-title">
-        <div><SectionLabel number="04">KIND WORDS, GOOGLE VERIFIED</SectionLabel><h2 id="reviews-title">Reviews from our <em>community.</em></h2><p>See what customers are saying about Pandiyan Cars on Google.</p></div>
+        <div><SectionLabel number="04">KIND WORDS, GOOGLE VERIFIED</SectionLabel><h2 id="reviews-title">Reviews from our <em>community.</em></h2><p>See what customers are saying about Elite Wheelz on Google.</p></div>
         <a className="button button-dark" href={MAP_LINK} target="_blank" rel="noreferrer">Read our Google reviews <span aria-hidden="true">↗</span></a>
       </section>
 
-      <section id="contact" className="contact-section"><div className="contact-header"><SectionLabel number="05">FIND YOUR WAY TO US</SectionLabel><h2>We’re right <em>here.</em></h2></div><div className="contact-grid"><div className="contact-details"><span className="contact-label">COME BY</span><p>{ADDRESS}</p><a className="text-link" href={MAP_LINK} target="_blank" rel="noreferrer">Get directions <span aria-hidden="true">↗</span></a><div className="contact-rule"/><span className="contact-label">GIVE US A CALL</span><a className="contact-phone" href={`tel:${PHONE.replace(/\s/g,'')}`}>{PHONE}</a><span className="contact-hours">Here to help with your next good drive.</span><a className="button button-dark" href={wa('Hi Pandiyan Cars, I would like to get in touch.')}>Chat on WhatsApp <span aria-hidden="true">↗</span></a></div><iframe title="Pandiyan Cars location on Google Maps" src={MAP_SRC} loading="lazy" className="map" referrerPolicy="no-referrer-when-downgrade"/></div></section>
+      <section id="contact" className="contact-section"><div className="contact-header"><SectionLabel number="05">FIND YOUR WAY TO US</SectionLabel><h2>We’re right <em>here.</em></h2></div><div className="contact-grid"><div className="contact-details"><span className="contact-label">COME BY</span><p>{ADDRESS}</p><a className="text-link" href={MAP_LINK} target="_blank" rel="noreferrer">Get directions <span aria-hidden="true">↗</span></a><div className="contact-rule"/><span className="contact-label">GIVE US A CALL</span><a className="contact-phone" href={`tel:${PHONE.replace(/\s/g,'')}`}>{PHONE}</a><span className="contact-hours">Here to help with your next good drive.</span><a className="button button-dark" href={wa('Hi Elite Wheelz, I would like to get in touch.')}>Chat on WhatsApp <span aria-hidden="true">↗</span></a></div><iframe title="Elite Wheelz location on Google Maps" src={MAP_SRC} loading="lazy" className="map" referrerPolicy="no-referrer-when-downgrade"/></div></section>
     </main>
 
-    <footer className="site-footer"><a href="#top" className="brand footer-brand"><span className="brand-mark">P<span>.</span></span><span>Pandiyan<span className="brand-sub">PRE-OWNED CARS · MADURAI</span></span></a><span className="footer-line">GOOD CARS. GOOD PEOPLE. GOOD TO GO.</span><span className="footer-right">© {new Date().getFullYear()} Pandiyan Cars</span><div className="social-links">{SOCIAL_LINKS.facebook&&<a href={SOCIAL_LINKS.facebook} target="_blank" rel="noreferrer" aria-label="Pandiyan Cars on Facebook">Facebook ↗</a>}{SOCIAL_LINKS.instagram&&<a href={SOCIAL_LINKS.instagram} target="_blank" rel="noreferrer" aria-label="Pandiyan Cars on Instagram">Instagram ↗</a>}</div><span className="developer-credit">Developed by <strong>JOD Tech IT Solution</strong></span></footer>
+    <footer className="site-footer"><a href="#top" className="brand footer-brand"><img className="brand-logo" src="/images/elite-wheelz-logo.png" alt=""/><span>Elite Wheelz<span className="brand-sub">PRE-OWNED CARS · MADURAI</span></span></a><span className="footer-line">GOOD CARS. GOOD PEOPLE. GOOD TO GO.</span><span className="footer-right">© {new Date().getFullYear()} Elite Wheelz</span><SocialIcons/><span className="developer-credit">Developed by <strong>JOD Tech IT Solution</strong></span></footer>
 
     {selectedCar&&<div className="dialog-backdrop" onClick={()=>setSelectedCar(null)}><div className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="enquiry-title" onClick={event=>event.stopPropagation()}><button className="dialog-close" aria-label="Close enquiry form" onClick={()=>setSelectedCar(null)}>×</button><span className="form-kicker">A GOOD CHOICE</span><h2 id="enquiry-title">Ask us about<br/><em>{selectedCar.title}</em></h2><p>{selectedCar.year} · {inr(selectedCar.price)}</p><LeadForm type="buy" car={selectedCar} placeholder="Ask us a question or request a test drive" buttonLabel="Send my enquiry"/></div></div>}
   </>;

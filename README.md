@@ -1,4 +1,4 @@
-# Pandiyan Cars
+# Elite Wheelz
 
 A React storefront and an Express/MongoDB API for a pre-owned car dealership. Customers can browse cars, send buyer or seller enquiries, and contact the dealership through WhatsApp. The password-protected owner dashboard manages inventory, enquiry follow-ups, and reports.
 

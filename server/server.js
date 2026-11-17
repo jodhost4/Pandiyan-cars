@@ -218,5 +218,5 @@ if(process.env.JWT_SECRET.length<32){
   process.exit(1);
 }
 mongoose.connect(process.env.MONGO_URI)
-  .then(()=>app.listen(port,()=>console.log(`Pandiyan Cars API listening on port ${port}`)))
+  .then(()=>app.listen(port,()=>console.log(`Elite Wheelz API listening on port ${port}`)))
   .catch(error=>{console.error('Could not connect to MongoDB:',error.message);process.exit(1)});

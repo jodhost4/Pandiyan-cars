@@ -33,7 +33,7 @@ export default function Admin(){
   const [authed,setAuthed]=useState(Boolean(localStorage.getItem('token')));
   const [tab,setTab]=useState('cars');
   if(!authed)return <Login onLogin={()=>setAuthed(true)}/>;
-  return <div className="admin"><header className="nav"><a href="/" className="admin-brand">Pandiyan Cars <span>· Owner dashboard</span></a>
+  return <div className="admin"><header className="nav"><a href="/" className="admin-brand">Elite Wheelz <span>· Owner dashboard</span></a>
     <nav>{['cars','gallery','leads','reports'].map(item=><a key={item} className={tab===item?'on':''} onClick={()=>setTab(item)}>{item==='leads'?'CRM leads':item[0].toUpperCase()+item.slice(1)}</a>)}
       <a onClick={()=>{localStorage.removeItem('token');setAuthed(false)}}>Log out</a></nav></header>
     <main className="sec">{tab==='cars'?<Cars/>:tab==='gallery'?<GalleryAdmin/>:tab==='leads'?<Leads/>:<Reports/>}</main></div>;
@@ -55,7 +55,7 @@ function Login({onLogin}){
     }catch(reason){setError(reason.message)}
     finally{setBusy(false)}
   }
-  return <div className="admin-login"><a href="/" className="admin-back">← Back to Pandiyan Cars</a><form className="admin-login-card" onSubmit={submit}><span className="form-kicker">PANDIYAN CARS · OWNER ACCESS</span><h1>Welcome back.</h1><p>Sign in to manage your cars and enquiries.</p>
+  return <div className="admin-login"><a href="/" className="admin-back">← Back to Elite Wheelz</a><form className="admin-login-card" onSubmit={submit}><span className="form-kicker">ELITE WHEELZ · OWNER ACCESS</span><h1>Welcome back.</h1><p>Sign in to manage your cars and enquiries.</p>
     <label>Email<input type="email" autoComplete="username" value={email} onChange={event=>setEmail(event.target.value)} required/></label>
     <label>Password<input type="password" autoComplete="current-password" value={password} onChange={event=>setPassword(event.target.value)} required/></label>
     <button className="button button-dark" disabled={busy}>{busy?'Signing in…':'Sign in'} <span aria-hidden="true">→</span></button>
@@ -171,7 +171,7 @@ function GalleryAdmin(){
       <h2>Upload gallery photos</h2>
       <div className="admin-form-grid">
         <label className="admin-full">Photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple required onChange={choosePhotos}/><span className="admin-help">{files.length?`${files.length} photo${files.length===1?'':'s'} selected.`:'Choose up to 8 JPG, PNG or WebP images, up to 5 MB each.'}</span></label>
-        <label className="admin-full">Caption <span className="admin-help">(optional; applies to all selected photos)</span><input value={caption} onChange={event=>setCaption(event.target.value)} maxLength="120" placeholder="e.g. A day with the Pandiyan Cars team"/></label>
+        <label className="admin-full">Caption <span className="admin-help">(optional; applies to all selected photos)</span><input value={caption} onChange={event=>setCaption(event.target.value)} maxLength="120" placeholder="e.g. A day with the Elite Wheelz team"/></label>
         {previews.length>0&&<div className="admin-photo-previews admin-full">{previews.map((src,index)=><img key={src} src={src} alt={`Selected gallery photo ${index+1}`}/>)}</div>}
       </div>
       <div className="admin-actions"><button className="button button-dark" disabled={busy||!files.length}>{busy?'Uploading…':'Upload photos'} <span aria-hidden="true">↑</span></button>{message&&<span className="admin-feedback" role="status">{message}</span>}</div>
@@ -199,7 +199,7 @@ function Leads(){
     {visible.map(lead=><article className="lead" key={lead._id}><div className="lead-main"><div className="lead-title"><h2>{lead.name}</h2><span className="tag">{lead.type}</span></div><div className="lead-contact"><a href={`tel:${lead.phone}`}>{lead.phone}</a>{lead.email&&<a href={`mailto:${lead.email}`}>{lead.email}</a>}</div><p className="meta">{new Date(lead.createdAt).toLocaleString('en-IN')}{lead.car&&` · ${lead.car.title}`}</p>{lead.message&&<p className="lead-message">{lead.message}</p>}
       {(lead.notes||[]).map((note,index)=><p className="admin-note" key={index}><b>Follow-up note</b> {note.text} <span>{new Date(note.at).toLocaleDateString('en-IN')}</span></p>)}
       <form className="lead-note-form" onSubmit={event=>{event.preventDefault();if(notes[lead._id]?.trim())update(lead._id,{note:notes[lead._id]});setNotes(current=>({...current,[lead._id]:''}))}}><input aria-label={`Add note for ${lead.name}`} placeholder="Add a follow-up note" value={notes[lead._id]||''} onChange={event=>setNotes(current=>({...current,[lead._id]:event.target.value}))}/><button className="btn sm">Save note</button></form></div>
-      <div className="lead-actions"><label>Stage<select value={lead.status} onChange={event=>update(lead._id,{status:event.target.value})}>{STAGES.map(stage=><option key={stage}>{stage}</option>)}</select></label><a className="btn sm wa" target="_blank" rel="noreferrer" href={wa(`Hi ${lead.name}, this is Pandiyan Cars regarding your enquiry.`,'91'+lead.phone.replace(/\D/g,'').slice(-10))}>WhatsApp</a><a className="btn sm ghost" href={`tel:${lead.phone}`}>Call</a></div>
+      <div className="lead-actions"><label>Stage<select value={lead.status} onChange={event=>update(lead._id,{status:event.target.value})}>{STAGES.map(stage=><option key={stage}>{stage}</option>)}</select></label><a className="btn sm wa" target="_blank" rel="noreferrer" href={wa(`Hi ${lead.name}, this is Elite Wheelz regarding your enquiry.`,'91'+lead.phone.replace(/\D/g,'').slice(-10))}>WhatsApp</a><a className="btn sm ghost" href={`tel:${lead.phone}`}>Call</a></div>
     </article>)}</>;
 }
 
