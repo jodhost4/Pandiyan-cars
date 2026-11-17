@@ -161,7 +161,7 @@ export default function Site(){
 
       <section id="buy" className="section inventory-section">
         <div className="section-top"><SectionLabel number="01">THE LINE-UP</SectionLabel><span className="inventory-count">{filteredCars.length.toString().padStart(2,'0')} of {cars.length} cars</span></div>
-        <div className="section-heading-row"><div><h2>Find your <em>perfect car.</em></h2><p className="section-intro">Narrow down the line-up to find the right fit.</p></div><a className="text-link desktop-link" href="#enquire">Can’t find what you’re after? <span aria-hidden="true">→</span></a></div>
+        <div className="section-heading-row"><div><h2>Find your <em>perfect car.</em></h2><p className="section-intro">Narrow down the line-up to find the right fit.</p></div><a className="text-link desktop-link" href={wa('Hi Pandiyan Cars, I am looking for a car that is not listed on your website.')}>Can’t find what you’re after? <span aria-hidden="true">→</span></a></div>
         <div className="car-finder" aria-label="Find your perfect car">
           <div className="car-filters">
             <label>Model<input value={filters.model} onChange={event=>setFilter('model',event.target.value)} placeholder="Search model"/></label>
@@ -187,7 +187,7 @@ export default function Site(){
             <div className="car-actions"><button className="button button-outline" onClick={()=>setSelectedCar(car)}>Ask about this car <span aria-hidden="true">↗</span></button><a className="whatsapp-link" target="_blank" rel="noreferrer" href={wa(`Hi Pandiyan Cars, I'm interested in the ${car.title} (${car.year}) listed for ${inr(car.price)}.`)}>WhatsApp us</a></div>
           </div>
         </article>)}</div>
-        <div className="mobile-enquire"><a className="text-link" href="#enquire">Looking for something else? Tell us <span aria-hidden="true">→</span></a></div>
+        <div className="mobile-enquire"><a className="text-link" href={wa('Hi Pandiyan Cars, I am looking for a car that is not listed on your website.')}>Looking for something else? Tell us <span aria-hidden="true">→</span></a></div>
       </section>
 
       <section id="sell" className="sell-section">
@@ -200,17 +200,12 @@ export default function Site(){
         <div className="story-copy"><SectionLabel number="03">A LITTLE ABOUT US</SectionLabel><h2>Cars are easy.<br/><em>Trust is personal.</em></h2><p>At Pandiyan Cars, we believe buying a pre-owned car should feel exciting, not uncertain. We’re a local team that takes the time to check the details, share what we know and help you find a car that fits your life.</p><p>No big promises. No pressure. Just good cars and a good conversation.</p><a className="text-link" href="#contact">Come say hello <span aria-hidden="true">→</span></a><div className="signature">Good journeys start here<span>— Pandiyan Cars</span></div></div>
       </section>
 
-      <section id="enquire" className="enquire-section">
-        <div><SectionLabel number="04">LET’S TALK CARS</SectionLabel><h2>Your question<br/>is a good <em>start.</em></h2><p>Tell us what you’re looking for. Our team will get back to you soon.</p><div className="enquire-contact"><span>Prefer a quick chat?</span><a href={wa('Hi Pandiyan Cars, I would like to enquire about a car.')}>WhatsApp us directly <span aria-hidden="true">↗</span></a></div></div>
-        <div className="enquire-form"><LeadForm type="buy" placeholder="A car you have in mind, your budget, or anything else" buttonLabel="Send my enquiry"/></div>
-      </section>
-
       <section className="reviews-section" aria-labelledby="reviews-title">
-        <div><SectionLabel number="05">KIND WORDS, GOOGLE VERIFIED</SectionLabel><h2 id="reviews-title">Reviews from our <em>community.</em></h2><p>See what customers are saying about Pandiyan Cars on Google.</p></div>
+        <div><SectionLabel number="04">KIND WORDS, GOOGLE VERIFIED</SectionLabel><h2 id="reviews-title">Reviews from our <em>community.</em></h2><p>See what customers are saying about Pandiyan Cars on Google.</p></div>
         <a className="button button-dark" href={MAP_LINK} target="_blank" rel="noreferrer">Read our Google reviews <span aria-hidden="true">↗</span></a>
       </section>
 
-      <section id="contact" className="contact-section"><div className="contact-header"><SectionLabel number="06">FIND YOUR WAY TO US</SectionLabel><h2>We’re right <em>here.</em></h2></div><div className="contact-grid"><div className="contact-details"><span className="contact-label">COME BY</span><p>{ADDRESS}</p><a className="text-link" href={MAP_LINK} target="_blank" rel="noreferrer">Get directions <span aria-hidden="true">↗</span></a><div className="contact-rule"/><span className="contact-label">GIVE US A CALL</span><a className="contact-phone" href={`tel:${PHONE.replace(/\s/g,'')}`}>{PHONE}</a><span className="contact-hours">Here to help with your next good drive.</span><a className="button button-dark" href={wa('Hi Pandiyan Cars, I would like to get in touch.')}>Chat on WhatsApp <span aria-hidden="true">↗</span></a></div><iframe title="Pandiyan Cars location on Google Maps" src={MAP_SRC} loading="lazy" className="map" referrerPolicy="no-referrer-when-downgrade"/></div></section>
+      <section id="contact" className="contact-section"><div className="contact-header"><SectionLabel number="05">FIND YOUR WAY TO US</SectionLabel><h2>We’re right <em>here.</em></h2></div><div className="contact-grid"><div className="contact-details"><span className="contact-label">COME BY</span><p>{ADDRESS}</p><a className="text-link" href={MAP_LINK} target="_blank" rel="noreferrer">Get directions <span aria-hidden="true">↗</span></a><div className="contact-rule"/><span className="contact-label">GIVE US A CALL</span><a className="contact-phone" href={`tel:${PHONE.replace(/\s/g,'')}`}>{PHONE}</a><span className="contact-hours">Here to help with your next good drive.</span><a className="button button-dark" href={wa('Hi Pandiyan Cars, I would like to get in touch.')}>Chat on WhatsApp <span aria-hidden="true">↗</span></a></div><iframe title="Pandiyan Cars location on Google Maps" src={MAP_SRC} loading="lazy" className="map" referrerPolicy="no-referrer-when-downgrade"/></div></section>
     </main>
 
     <footer className="site-footer"><a href="#top" className="brand footer-brand"><span className="brand-mark">P<span>.</span></span><span>Pandiyan<span className="brand-sub">PRE-OWNED CARS · MADURAI</span></span></a><span className="footer-line">GOOD CARS. GOOD PEOPLE. GOOD TO GO.</span><span className="footer-right">© {new Date().getFullYear()} Pandiyan Cars</span><div className="social-links">{SOCIAL_LINKS.facebook&&<a href={SOCIAL_LINKS.facebook} target="_blank" rel="noreferrer" aria-label="Pandiyan Cars on Facebook">Facebook ↗</a>}{SOCIAL_LINKS.instagram&&<a href={SOCIAL_LINKS.instagram} target="_blank" rel="noreferrer" aria-label="Pandiyan Cars on Instagram">Instagram ↗</a>}</div><span className="developer-credit">Developed by <strong>JOD Tech IT Solution</strong></span></footer>
