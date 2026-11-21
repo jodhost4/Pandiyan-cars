@@ -59,10 +59,11 @@ function SectionLabel({children,number}){return <div className="section-label"><
 
 export default function Site(){
   const [cars,setCars]=useState([]);
+  const [brands,setBrands]=useState([]);
+  const [brandError,setBrandError]=useState('');
   const [filters,setFilters]=useState({model:'',make:'',bodyType:'',priceMin:'',priceMax:'',fuel:'',transmission:'',color:'',owners:'',kmMin:'',kmMax:'',yearMin:'',yearMax:''});
   const [error,setError]=useState('');
   const [selectedCar,setSelectedCar]=useState(null);
-  const [featuredIndex,setFeaturedIndex]=useState(0);
   const [menuOpen,setMenuOpen]=useState(false);
   const [heroMake,setHeroMake]=useState('');
   const [heroBodyType,setHeroBodyType]=useState('');
@@ -70,17 +71,36 @@ export default function Site(){
 
   useEffect(()=>{
     let active=true;
-    request('/api/cars')
-      .then(data=>{if(active){setCars(data);setError('')}})
-      .catch(()=>{if(active)setError('We couldn’t load the car listings. Please try again in a moment.')});
-    return ()=>{active=false};
+    const loadBrands=()=>{
+      request('/api/brands')
+        .then(data=>{if(active){setBrands(data);setBrandError('')}})
+        .catch(()=>{if(active)setBrandError('We couldn’t load the brand logos. Please try again in a moment.')});
+    };
+    const loadCars=()=>{
+      request('/api/cars')
+        .then(data=>{if(active){setCars(data);setError('')}})
+        .catch(()=>{if(active)setError('We couldn’t load the car listings. Please try again in a moment.')});
+    };
+    const handleStorage=event=>{
+      if(event.key==='elite-wheelz-cars-updated')loadCars();
+      if(event.key==='elite-wheelz-brands-updated')loadBrands();
+    };
+    const handleVisibility=()=>{
+      if(document.visibilityState==='visible'){
+        loadCars();
+        loadBrands();
+      }
+    };
+    loadCars();
+    loadBrands();
+    window.addEventListener('storage',handleStorage);
+    document.addEventListener('visibilitychange',handleVisibility);
+    return ()=>{
+      active=false;
+      window.removeEventListener('storage',handleStorage);
+      document.removeEventListener('visibilitychange',handleVisibility);
+    };
   },[]);
-
-  useEffect(()=>{
-    if(cars.length<2)return undefined;
-    const timer=setInterval(()=>setFeaturedIndex(index=>(index+1)%cars.length),4500);
-    return ()=>clearInterval(timer);
-  },[cars.length]);
 
   useEffect(()=>{
     const textElements=document.querySelectorAll(
@@ -106,7 +126,30 @@ export default function Site(){
     return ()=>observer.disconnect();
   },[]);
 
-  function moveFeatured(step){setFeaturedIndex(index=>(index+step+cars.length)%cars.length)}
+  useEffect(()=>{
+    const visualElements=document.querySelectorAll(
+      '.car-card, .brand-logo-item:not([aria-hidden="true"]), .story-image, .sell-form-panel, .contact-grid > *'
+    );
+    if(!('IntersectionObserver' in window)){
+      visualElements.forEach(element=>element.classList.add('is-visible'));
+      return undefined;
+    }
+    const observer=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    },{threshold:.12,rootMargin:'0px 0px -30px 0px'});
+    visualElements.forEach((element,index)=>{
+      element.style.setProperty('--reveal-delay',`${(index%3)*100}ms`);
+      element.classList.add('scroll-reveal');
+      observer.observe(element);
+    });
+    return ()=>observer.disconnect();
+  },[cars.length,brands.length]);
+
   function setFilter(field,value){setFilters(current=>({...current,[field]:value}))}
   function clearFilters(){setFilters({model:'',make:'',bodyType:'',priceMin:'',priceMax:'',fuel:'',transmission:'',color:'',owners:'',kmMin:'',kmMax:'',yearMin:'',yearMax:''})}
   function searchFromHero(event){
@@ -148,32 +191,15 @@ export default function Site(){
 
     <main id="top">
       <section className="hero">
-        <img className="hero-photo" src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=2200&q=85" alt="A well-kept car ready for its next owner"/>
+        <img className="hero-photo" src="/images/hero-suv.png" alt="A white premium SUV shown in a three-quarter view"/>
         <div className="hero-shade"/>
         <div className="hero-ribbon" aria-hidden="true"/>
         <div className="hero-content">
           <div className="eyebrow eyebrow-light"><span className="eyebrow-dot"/>PRE-OWNED CARS · MADURAI</div>
           <h1>Find the car<br/>that feels like<br/><em>your next chapter.</em></h1>
           <p>Good cars, chosen with care. Explore a considered collection of pre-owned cars, ready for the road ahead.</p>
-          <div className="hero-actions"><a className="button button-lime" href="#buy">Explore our cars <span aria-hidden="true">↗</span></a><a className="text-link light-link" href="#sell">I want to sell my car <span aria-hidden="true">→</span></a></div>
+          <div className="hero-actions"><a className="button button-lime hero-buy-button" href="#buy">Buy a car <span aria-hidden="true">↗</span></a><a className="button hero-sell-button" href="#sell">Sell your car <span aria-hidden="true">↗</span></a></div>
         </div>
-        {cars.length>0&&<aside className="hero-feature" aria-label="Elite Wheelz picks">
-          <span className="feature-kicker">ELITE WHEELZ PICK <span aria-hidden="true">✳</span></span>
-          <div className="feature-viewport" aria-live="polite">
-            <div className="feature-track" style={{transform:`translateX(-${featuredIndex*100}%)`}}>
-              {cars.map((car,index)=><article className="hero-feature-slide" key={car._id} aria-label={`${index+1} of ${cars.length}`}>
-                <img src={car.images?.[0]||'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=80'} alt={car.title}/>
-                <div className="feature-details"><div><span>{car.brand||'PRE-OWNED · CHECKED'}</span><h2>{car.title}</h2><p>{car.year} · {Number(car.km||0).toLocaleString('en-IN')} km</p></div><strong>{inr(car.price)}</strong></div>
-                <button type="button" className="feature-link" onClick={()=>setSelectedCar(car)}>Discover this car <span aria-hidden="true">↗</span></button>
-              </article>)}
-            </div>
-          </div>
-          {cars.length>1&&<div className="feature-controls" aria-label="Choose an Elite Wheelz pick">
-            <button type="button" aria-label="Previous featured car" onClick={()=>moveFeatured(-1)}>←</button>
-            <span>{String(featuredIndex+1).padStart(2,'0')} / {String(cars.length).padStart(2,'0')}</span>
-            <button type="button" aria-label="Next featured car" onClick={()=>moveFeatured(1)}>→</button>
-          </div>}
-        </aside>}
         <form className="hero-search" onSubmit={searchFromHero}>
           <div className="hero-search-heading"><span>START YOUR SEARCH</span><strong>Find your next car</strong></div>
           <label><span>MAKE</span><select value={heroMake} onChange={event=>setHeroMake(event.target.value)}><option value="">All makes</option>{optionsFor('brand').map(item=><option key={item} value={item}>{item}</option>)}</select></label>
@@ -206,7 +232,7 @@ export default function Site(){
         {!error&&!cars.length&&<div className="empty-state"><span className="empty-mark">✳</span><h3>No cars in the line-up just yet.</h3><p>We’re always finding the next good one. Send us a message and we’ll help you look.</p><a className="text-link" href={wa('Hi Elite Wheelz, I am looking for a car.')}>Ask us on WhatsApp <span aria-hidden="true">↗</span></a></div>}
         {!error&&cars.length>0&&!filteredCars.length&&<div className="empty-state"><span className="empty-mark">✳</span><h3>No cars match those filters.</h3><p>Try adjusting your search or clearing the filters.</p><button className="button button-outline" onClick={clearFilters}>Clear filters</button></div>}
         <div className="car-grid">{filteredCars.map((car,index)=><article className="car-card" key={car._id}>
-          <div className="car-image-wrap"><img className="car-image" src={car.images?.[0]||'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1000&q=75'} alt={car.title} loading="lazy"/><span className="car-number">{String(index+1).padStart(2,'0')}</span><span className="car-image-label">CHECKED &amp; READY</span></div>
+          <div className="car-image-wrap"><img className="car-image" src={car.images?.[0]||'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1000&q=75'} alt={car.title} loading="lazy"/><span className={`car-image-label${car.status==='sold'?' sold-image-badge':''}`}>{car.status==='sold'?'SOLD':'CHECKED & READY'}</span><span className="car-number">{String(index+1).padStart(2,'0')}</span></div>
           <div className="car-details"><div className="car-title-row"><div><span className="car-make">{car.brand||'ELITE WHEELZ PICK'}</span><h3>{car.title}</h3></div><strong className="car-price">{inr(car.price)}</strong></div>
             <div className="car-specs"><span>{car.year}</span><span>{Number(car.km||0).toLocaleString('en-IN')} km</span><span>{car.fuel}</span><span>{car.transmission}</span>{car.bodyType&&<span>{car.bodyType}</span>}{car.color&&<span>{car.color}</span>}{car.owners&&<span>{car.owners} owner{Number(car.owners)===1?'':'s'}</span>}</div>
             <div className="car-actions"><button className="button button-outline" onClick={()=>setSelectedCar(car)}>Ask about this car <span aria-hidden="true">↗</span></button><a className="whatsapp-link" target="_blank" rel="noreferrer" href={wa(`Hi Elite Wheelz, I'm interested in the ${car.title} (${car.year}) listed for ${inr(car.price)}.`)}>WhatsApp us</a></div>
@@ -224,6 +250,21 @@ export default function Site(){
         <div className="story-image"><img src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1200&q=80" alt="A scenic open road at golden hour" loading="lazy"/><span>MADURAI, OUR HOME.</span></div>
         <div className="story-copy"><SectionLabel number="03">A LITTLE ABOUT US</SectionLabel><h2>Cars are easy.<br/><em>Trust is personal.</em></h2><p>At Elite Wheelz, we believe buying a pre-owned car should feel exciting, not uncertain. We’re a local team that takes the time to check the details, share what we know and help you find a car that fits your life.</p><p>No big promises. No pressure. Just good cars and a good conversation.</p><a className="text-link" href="#contact">Come say hello <span aria-hidden="true">→</span></a><div className="signature">Good journeys start here<span>— Elite Wheelz</span></div></div>
       </section>
+
+      {(brands.length>0||brandError)&&<section className="brand-showcase" aria-label="Vehicle brands">
+        <SectionLabel number="06">OUR BRANDS</SectionLabel>
+        {brandError?<p className="brand-showcase-error" role="alert">{brandError}</p>:<div className="brand-marquee">
+          <div className="brand-marquee-track">
+            {[0,1].map(copy=><div className="brand-logo-set" key={copy} aria-hidden={copy===1}>
+              {brands.map(brand=><div className="brand-logo-item" key={`${copy}-${brand._id}`}>
+                <span className="brand-card-name">{brand.name}</span>
+                <div className="brand-card-mark"><img src={brand.logo} alt={copy===0?`${brand.name} logo`:''} loading="lazy"/></div>
+                <span className="brand-card-arrow" aria-hidden="true">↗</span>
+              </div>)}
+            </div>)}
+          </div>
+        </div>}
+      </section>}
 
       <section className="reviews-section" aria-labelledby="reviews-title">
         <div><SectionLabel number="04">KIND WORDS, GOOGLE VERIFIED</SectionLabel><h2 id="reviews-title">Reviews from our <em>community.</em></h2><p>See what customers are saying about Elite Wheelz on Google.</p></div>

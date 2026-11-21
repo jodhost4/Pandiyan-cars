@@ -61,9 +61,14 @@ const galleryPhotoSchema=new Schema({
   image:{type:String,required:true},
   caption:{type:String,trim:true,maxlength:120}
 },{timestamps:true});
+const brandSchema=new Schema({
+  name:{type:String,required:true,trim:true,maxlength:80,unique:true},
+  logo:{type:String,required:true}
+},{timestamps:true});
 const Car=model('Car',carSchema);
 const Lead=model('Lead',leadSchema);
 const GalleryPhoto=model('GalleryPhoto',galleryPhotoSchema);
+const Brand=model('Brand',brandSchema);
 
 function auth(req,res,next){
   try{
@@ -101,7 +106,6 @@ app.get('/api/cars',(req,res,next)=>{
   return next();
 },wrap(async(req,res)=>{
   const filter={};
-  if(!req.query.all)filter.status='available';
   if(req.query.q){
     const query=String(req.query.q).slice(0,80).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     filter.$or=[{title:new RegExp(query,'i')},{brand:new RegExp(query,'i')}];
@@ -142,6 +146,36 @@ app.delete('/api/gallery/:id',auth,wrap(async(req,res)=>{
   if(filename){
     try{await fs.promises.unlink(path.join(uploadsDir,filename))}
     catch(error){if(error.code!=='ENOENT')console.error('Could not remove deleted gallery image:',error)}
+  }
+  res.json({ok:true});
+}));
+
+app.get('/api/brands',wrap(async(_req,res)=>{
+  res.json(await Brand.find().sort('name').lean());
+}));
+app.post('/api/brands',auth,upload.single('logo'),wrap(async(req,res)=>{
+  const name=typeof req.body.name==='string'?req.body.name.trim().slice(0,80):'';
+  if(!name){
+    if(req.file)await fs.promises.unlink(req.file.path);
+    return res.status(400).json({error:'Enter a brand name.'});
+  }
+  if(!req.file)return res.status(400).json({error:'Choose a brand logo to upload.'});
+  try{
+    const brand=await Brand.create({name,logo:`/uploads/${req.file.filename}`});
+    res.status(201).json(brand);
+  }catch(error){
+    try{await fs.promises.unlink(req.file.path)}
+    catch(cleanupError){if(cleanupError.code!=='ENOENT')console.error('Could not remove rejected brand logo:',cleanupError)}
+    throw error;
+  }
+}));
+app.delete('/api/brands/:id',auth,wrap(async(req,res)=>{
+  const brand=await Brand.findByIdAndDelete(req.params.id);
+  if(!brand)return res.status(404).json({error:'Brand not found.'});
+  const filename=brand.logo.startsWith('/uploads/')?path.basename(brand.logo):'';
+  if(filename){
+    try{await fs.promises.unlink(path.join(uploadsDir,filename))}
+    catch(error){if(error.code!=='ENOENT')console.error('Could not remove deleted brand logo:',error)}
   }
   res.json({ok:true});
 }));
@@ -196,9 +230,10 @@ app.get('*',(req,res,next)=>{
 
 app.use((err,_req,res,_next)=>{
   if(err instanceof multer.MulterError){
-    const message=err.code==='LIMIT_FILE_SIZE'?'Each image must be 5 MB or smaller.':'Please upload no more than 8 car images.';
+    const message=err.code==='LIMIT_FILE_SIZE'?'Each image must be 5 MB or smaller.':err.code==='LIMIT_UNEXPECTED_FILE'?'Please upload a single brand logo.':'Please upload no more than 8 car images.';
     return res.status(400).json({error:message});
   }
+  if(err.code===11000)return res.status(409).json({error:'A brand with this name already exists.'});
   if(err instanceof mongoose.Error.ValidationError||err instanceof mongoose.Error.CastError){
     return res.status(400).json({error:err.message});
   }

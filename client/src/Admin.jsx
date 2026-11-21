@@ -34,9 +34,9 @@ export default function Admin(){
   const [tab,setTab]=useState('cars');
   if(!authed)return <Login onLogin={()=>setAuthed(true)}/>;
   return <div className="admin"><header className="nav"><a href="/" className="admin-brand">Elite Wheelz <span>· Owner dashboard</span></a>
-    <nav>{['cars','gallery','leads','reports'].map(item=><a key={item} className={tab===item?'on':''} onClick={()=>setTab(item)}>{item==='leads'?'CRM leads':item[0].toUpperCase()+item.slice(1)}</a>)}
+    <nav>{['cars','brands','gallery','leads','reports'].map(item=><a key={item} className={tab===item?'on':''} onClick={()=>setTab(item)}>{item==='leads'?'CRM leads':item[0].toUpperCase()+item.slice(1)}</a>)}
       <a onClick={()=>{localStorage.removeItem('token');setAuthed(false)}}>Log out</a></nav></header>
-    <main className="sec">{tab==='cars'?<Cars/>:tab==='gallery'?<GalleryAdmin/>:tab==='leads'?<Leads/>:<Reports/>}</main></div>;
+    <main className="sec">{tab==='cars'?<Cars/>:tab==='brands'?<BrandsAdmin/>:tab==='gallery'?<GalleryAdmin/>:tab==='leads'?<Leads/>:<Reports/>}</main></div>;
 }
 
 function Login({onLogin}){
@@ -89,7 +89,13 @@ function Cars(){
     finally{setBusy(false)}
   }
   async function changeStatus(car){
-    try{const body=new FormData();body.append('status',car.status==='sold'?'available':'sold');await api(`/cars/${car._id}`,{method:'PUT',body});refresh()}
+    try{
+      const body=new FormData();
+      body.append('status',car.status==='sold'?'available':'sold');
+      await api(`/cars/${car._id}`,{method:'PUT',body});
+      localStorage.setItem('elite-wheelz-cars-updated',String(Date.now()));
+      refresh();
+    }
     catch(reason){setMessage(reason.message)}
   }
   async function remove(car){
@@ -180,6 +186,61 @@ function GalleryAdmin(){
     {error&&<p className="admin-error" role="alert">{error}</p>}
     {photos?.length===0&&<p className="admin-empty">No gallery photos yet. Upload your first photos above.</p>}
     {photos?.length>0&&<div className="admin-gallery-grid">{photos.map(photo=><article className="admin-gallery-card" key={photo._id}><img src={photo.image} alt={photo.caption||'Gallery photo'}/><div><p>{photo.caption||'No caption'}</p><button className="btn sm ghost" onClick={()=>removePhoto(photo)}>Delete photo</button></div></article>)}</div>}
+  </>;
+}
+
+function BrandsAdmin(){
+  const {data:brands,error,refresh}=useLoad(()=>api('/brands'));
+  const [logo,setLogo]=useState(null);
+  const [preview,setPreview]=useState('');
+  const [busy,setBusy]=useState(false);
+  const [message,setMessage]=useState('');
+  useEffect(()=>{
+    if(!logo){setPreview('');return undefined}
+    const url=URL.createObjectURL(logo);
+    setPreview(url);
+    return ()=>URL.revokeObjectURL(url);
+  },[logo]);
+  async function addBrand(event){
+    event.preventDefault();
+    if(!logo){setMessage('Choose a brand logo to upload.');return}
+    const form=event.currentTarget;
+    setBusy(true);setMessage('');
+    try{
+      const body=new FormData(form);
+      await api('/brands',{method:'POST',body});
+      setLogo(null);form.reset();setMessage('Brand logo added.');
+      localStorage.setItem('elite-wheelz-brands-updated',String(Date.now()));
+      refresh();
+    }catch(reason){setMessage(reason.message)}
+    finally{setBusy(false)}
+  }
+  async function removeBrand(brand){
+    if(!window.confirm(`Delete the ${brand.name} logo?`))return;
+    setMessage('');
+    try{
+      await api(`/brands/${brand._id}`,{method:'DELETE'});
+      setMessage('Brand logo deleted.');
+      localStorage.setItem('elite-wheelz-brands-updated',String(Date.now()));
+      refresh();
+    }
+    catch(reason){setMessage(reason.message)}
+  }
+  return <>
+    <div className="admin-page-heading"><div><span className="form-kicker">BRAND SHOWCASE</span><h1>Brands</h1><p>Add or remove brand logos displayed on the landing page.</p></div><a className="button button-outline" href="/" target="_blank" rel="noreferrer">View website ↗</a></div>
+    <form className="admin-editor brand-upload-form" onSubmit={addBrand}>
+      <h2>Add a brand logo</h2>
+      <div className="admin-form-grid">
+        <label>Brand name<input name="name" required maxLength="80" placeholder="e.g. Toyota"/></label>
+        <label>Logo image<input name="logo" type="file" accept="image/jpeg,image/png,image/webp" required onChange={event=>setLogo(event.target.files?.[0]||null)}/><span className="admin-help">Choose a JPG, PNG or WebP logo up to 5 MB.</span></label>
+        {preview&&<div className="brand-logo-preview"><img src={preview} alt="Selected brand logo preview"/></div>}
+      </div>
+      <div className="admin-actions"><button className="button button-dark" disabled={busy}>{busy?'Uploading…':'Add brand'} <span aria-hidden="true">↑</span></button>{message&&<span className="admin-feedback" role="status">{message}</span>}</div>
+    </form>
+    {error&&<p className="admin-error" role="alert">{error}</p>}
+    <div className="admin-section-heading"><h2>Published brand logos</h2><span>{brands?.length||0} brands</span></div>
+    {!error&&!brands?.length&&<p className="admin-empty">No brand logos yet. Add logos above to show them on the landing page.</p>}
+    {brands?.length>0&&<div className="admin-brand-grid">{brands.map(brand=><article className="admin-brand-card" key={brand._id}><img src={brand.logo} alt={`${brand.name} logo`}/><div><strong>{brand.name}</strong><button type="button" className="btn sm ghost" onClick={()=>removeBrand(brand)}>Delete</button></div></article>)}</div>}
   </>;
 }
 

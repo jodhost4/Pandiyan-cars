@@ -53,6 +53,10 @@ Set the upload directory to the provider's persistent disk path. Without persist
 
 The public gallery is available at `/gallery`. Sign in to `/admin`, open the **Gallery** tab, choose up to 8 JPG, PNG, or WebP photos (5 MB each), and optionally add a caption for the batch. Uploaded photos appear in the public gallery; owners can remove them from the same admin tab. Gallery photos use the same persistent `UPLOADS_DIR` storage as car listing photos.
 
+## Brand logos
+
+Sign in to `/admin` and open the **Brands** tab to add or remove brand logos. Each logo can be a JPG, PNG, or WebP image up to 5 MB. Published logos appear in a continuously scrolling strip on the landing page and use the same persistent `UPLOADS_DIR` storage as car and gallery images.
+
 ## Dealership details
 
 Update `client/src/config.js` with the dealership's WhatsApp number (digits only, including the country code), phone number, and Facebook/Instagram profile URLs. The address, directions link, and map coordinates are configured there as well.
